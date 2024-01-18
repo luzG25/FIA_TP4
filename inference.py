@@ -694,15 +694,21 @@ class ParticleFilter(InferenceModule):
         the DiscreteDistribution may be useful.
         """
         "*** YOUR CODE HERE ***"
-        dist = DiscreteDistribution()
         pacmanPosition = gameState.getPacmanPosition()
         jailPosition = self.getJailPosition()
+        dist = DiscreteDistribution()
+        for p in self.particles:
+            prob = self.getObservationProb(observation, pacmanPosition, p, jailPosition)
+            dist[p] += prob
+        if dist.total() == 0:
+            self.initializeUniformly(gameState)
+        else:
+            dist.normalize()
+            self.beliefs = dist     
+            for i in range(self.numParticles):
+                new_sample = dist.sample()
+                self.particles[i] = new_sample
 
-        for p in self.allPositions:
-            prob = self.getObservationProb(observation, pacmanPosition, p, jailPosition) 
-            dist[p] = prob * self.beliefs[p]
-        dist.normalize()
-        self.beliefs = dist
 
         "*** END YOUR CODE HERE ***"
     
@@ -716,7 +722,14 @@ class ParticleFilter(InferenceModule):
         gameState.
         """
         "*** YOUR CODE HERE ***"
-        for i in range(self.numGhosts):
-                newPosDist = self.getPositionDistribution(gameState, newParticle, i, self.ghostAgents[i])
-                newParticle[i] = newPosDist.sample()
+        cache = {}
+        for i in range(self.numParticles):
+            particle = self.particles[i]
+            if particle in cache:
+                self.particles[i] = cache[particle].sample()
+            else:
+                dist = self.getPositionDistribution(gameState, particle)
+                cache[particle] = dist
+                self.particles[i] = dist.sample()
         "*** END YOUR CODE HERE ***"
+        
