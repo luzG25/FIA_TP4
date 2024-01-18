@@ -694,16 +694,15 @@ class ParticleFilter(InferenceModule):
         the DiscreteDistribution may be useful.
         """
         "*** YOUR CODE HERE ***"
-        noisyDistance = observation
+        dist = DiscreteDistribution()
         pacmanPosition = gameState.getPacmanPosition()
-        allPossible = util.Counter()
-        for p in self.legalPositions:
-            trueDistance = util.manhattanDistance(p, pacmanPosition)
-            if noisyDistance != None and \
-                    busters.getObservationProbability(noisyDistance, trueDistance) > 0:
-                allPossible[p] = 1.0
-        allPossible.normalize()
-        self.beliefs = allPossible
+        jailPosition = self.getJailPosition()
+
+        for p in self.allPositions:
+            prob = self.getObservationProb(observation, pacmanPosition, p, jailPosition) 
+            dist[p] = prob * self.beliefs[p]
+        dist.normalize()
+        self.beliefs = dist
 
         "*** END YOUR CODE HERE ***"
     
