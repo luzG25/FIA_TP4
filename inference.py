@@ -610,7 +610,13 @@ class ExactInference(InferenceModule):
         current position is known.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        dist = DiscreteDistribution()
+        for oldPos in self.allPositions:
+            newPosDist = self.getPositionDistribution(gameState, oldPos)
+            old_prob = self.beliefs[oldPos]
+            for newPos in newPosDist.keys():
+                dist[newPos] += old_prob * newPosDist[newPos]
+        self.beliefs = dist
         "*** END YOUR CODE HERE ***"
 
     def getBeliefDistribution(self):
@@ -642,7 +648,17 @@ class ParticleFilter(InferenceModule):
         """
         self.particles = []
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        temp = []
+        n = self.numParticles
+        size = len(self.legalPositions)
+        while n > 0:
+            if n > size:
+                temp += self.legalPositions
+                n -= size
+            else:
+                temp += self.legalPositions[0:n]
+                n = 0
+        self.particles = temp
         "*** END YOUR CODE HERE ***"
 
     def getBeliefDistribution(self):
@@ -654,7 +670,11 @@ class ParticleFilter(InferenceModule):
         This function should return a normalized distribution.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        dist = DiscreteDistribution()
+        for p in self.particles:
+            dist[p] += 1
+        dist.normalize()
+        return dist
         "*** END YOUR CODE HERE ***"
     
     ########### ########### ###########
@@ -674,7 +694,17 @@ class ParticleFilter(InferenceModule):
         the DiscreteDistribution may be useful.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        noisyDistance = observation
+        pacmanPosition = gameState.getPacmanPosition()
+        allPossible = util.Counter()
+        for p in self.legalPositions:
+            trueDistance = util.manhattanDistance(p, pacmanPosition)
+            if noisyDistance != None and \
+                    busters.getObservationProbability(noisyDistance, trueDistance) > 0:
+                allPossible[p] = 1.0
+        allPossible.normalize()
+        self.beliefs = allPossible
+
         "*** END YOUR CODE HERE ***"
     
     ########### ########### ###########
@@ -687,5 +717,7 @@ class ParticleFilter(InferenceModule):
         gameState.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        for i in range(self.numGhosts):
+                newPosDist = self.getPositionDistribution(gameState, newParticle, i, self.ghostAgents[i])
+                newParticle[i] = newPosDist.sample()
         "*** END YOUR CODE HERE ***"

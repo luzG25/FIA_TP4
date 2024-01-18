@@ -104,31 +104,38 @@ def joinFactors(factors: List[Factor]):
 
     "*** YOUR CODE HERE ***"
     # Calculate the set of unconditioned and conditioned variables for the join
-    unconditioned = []
-    conditioned = []
-    variableDomainsDict = {}
+    # The variables needed for result factors
+    result_uncond = set()
+    result_cond = set()
+    result_dict = {}
 
-    if factors and len(factors) > 0:
-        variableDomainsDict = factors[0].variableDomainsDict()
+    # Convert input factors into a list.
+    inputfactors = list(factors)
 
-    for f in factors:
-        temp_unconditioned = f.unconditionedVariables()
-        temp_conditioned = f.conditionedVariables()
-        unconditioned.extend(temp_unconditioned)
-        for conditioned_var in temp_conditioned:
-            if conditioned_var not in conditioned:
-                conditioned.append(conditioned_var)
-    conditioned = [var for var in conditioned if var not in unconditioned]
+    # Determine elements in unconditional variable
+    for i in setsOfUnconditioned:
+        for j in i:
+            result_uncond.add(j)
 
-    newFactor = Factor(unconditioned, conditioned, variableDomainsDict)
-    assignments = newFactor.getAllPossibleAssignmentDicts()
-    for assignment in assignments:
-        prob = 1
+    # Determine which elements are in condtional variable
+    for factor in factors:
+        for i in factor.conditionedVariables():
+            if i not in result_uncond:
+                result_cond.add(i)
+    
+    # Find the correct value for dictionary
+    result_dict = inputfactors[0].variableDomainsDict()
+    
+    new_factor = Factor(result_uncond, result_cond, result_dict)
+    
+    for assignmentDict in new_factor.getAllPossibleAssignmentDicts():
+        probability = 1
         for factor in factors:
-            prob *= factor.getProbability(assignment)
-        newFactor.setProbability(assignment, prob)
-
-    return newFactor
+            probability *= factor.getProbability(assignmentDict)
+        new_factor.setProbability(assignmentDict, probability)
+    
+    return new_factor
+    #raiseNotDefined()
     "*** END YOUR CODE HERE ***"
 
 ########### ########### ###########
