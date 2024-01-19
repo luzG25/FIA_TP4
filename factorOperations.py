@@ -94,7 +94,7 @@ def joinFactors(factors: List[Factor]):
     if len(factors) > 1:
         intersect = functools.reduce(lambda x, y: x & y, setsOfUnconditioned)
         if len(intersect) > 0:
-            print("Factor failed joinFactors typecheck: ", factor)
+            print("Factor failed joinFactors typecheck: ", prob)
             raise ValueError("unconditionedVariables can only appear in one factor. \n"
                     + "unconditionedVariables: " + str(intersect) + 
                     "\nappear in more than one input factor.\n" + 
@@ -103,38 +103,41 @@ def joinFactors(factors: List[Factor]):
 
 
     "*** YOUR CODE HERE ***"
-    # Calculate the set of unconditioned and conditioned variables for the join
-    # The variables needed for result factors
+    #Calcular o conjunto de variaveis condicionais e incondicionais para a junção
+    #as variaveis são para as probabilidades resultantes
     result_uncond = set()
     result_cond = set()
     result_dict = {}
 
-    # Convert input factors into a list.
-    inputfactors = list(factors)
+    
+    entradaFactors = list(factors) #colocar as probabilidades em lista
 
-    # Determine elements in unconditional variable
+    #determinais as variavel incondicional
     for i in setsOfUnconditioned:
         for j in i:
-            result_uncond.add(j)
+            result_uncond.add(j) #adicionar no conjunto 
 
-    # Determine which elements are in condtional variable
-    for factor in factors:
-        for i in factor.conditionedVariables():
+    #O mesmo para variaveis condicionais
+    #mas agora ignora os que estão no conjunto de variaveis incondicionais
+    for prob in factors:
+        for i in prob.conditionedVariables():
             if i not in result_uncond:
                 result_cond.add(i)
     
-    # Find the correct value for dictionary
-    result_dict = inputfactors[0].variableDomainsDict()
+    # adicionar as variaveis no resultado se são do dominio do problema
+    result_dict = entradaFactors[0].variableDomainsDict()
     
+    # criar um probabilidade com os outros conjuntos
     new_factor = Factor(result_uncond, result_cond, result_dict)
     
     for assignmentDict in new_factor.getAllPossibleAssignmentDicts():
-        probability = 1
-        for factor in factors:
-            probability *= factor.getProbability(assignmentDict)
-        new_factor.setProbability(assignmentDict, probability)
+        probabilidade = 1 # variável para acumular as probabilidades
+        
+        for prob in factors:
+            probabilidade *= prob.getProbability(assignmentDict) #
+        new_factor.setProbability(assignmentDict, probabilidade)
     
-    return new_factor
+    return new_factor # retornar o calculo das probabilidades para todas as combinações de valores.
     #raiseNotDefined()
     "*** END YOUR CODE HERE ***"
 
@@ -186,20 +189,23 @@ def eliminateWithCallTracking(callTrackingList=None):
                     "unconditionedVariables: " + str(factor.unconditionedVariables()))
 
         "*** YOUR CODE HERE ***"
-        unconditioned = factor.unconditionedVariables()
-        unconditioned = [var for var in unconditioned if var != eliminationVariable]
-        conditioned = factor.conditionedVariables()
-        variableDomainsDict = factor.variableDomainsDict()
-        domain = variableDomainsDict[eliminationVariable]
-        newFactor = Factor(unconditioned, conditioned, variableDomainsDict)
-        for assignment in newFactor.getAllPossibleAssignmentDicts():
+        unconditioned = factor.unconditionedVariables()  # obter as variaveis incondicionais
+        unconditioned = [var for var in unconditioned if var != eliminationVariable] # eliminar as variaveis
+        conditioned = factor.conditionedVariables() # obter as variaveis condicionais
+        variableDomainsDict = factor.variableDomainsDict() #  
+        dominio = variableDomainsDict[eliminationVariable] # 
+        
+        nvProb = Factor(unconditioned, conditioned, variableDomainsDict) 
+        
+        for aux in nvProb.getAllPossibleAssignmentDicts():
             prob = 0
-            for elim_val in domain:
-                old_assignment = assignment.copy()
-                old_assignment[eliminationVariable] = elim_val
-                prob += factor.getProbability(old_assignment)
-            newFactor.setProbability(assignment, prob)
-        return newFactor
+            for elim_val in dominio:
+                aux0 = aux.copy() #
+                aux0[eliminationVariable] = elim_val 
+                prob += factor.getProbability(aux0) 
+            nvProb.setProbability(aux, prob) 
+        
+        return nvProb
         "*** END YOUR CODE HERE ***"
 
     return eliminate

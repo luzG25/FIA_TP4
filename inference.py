@@ -200,14 +200,18 @@ def inferenceByVariableEliminationWithCallTracking(callTrackingList=None):
             eliminationOrder = sorted(list(eliminationVariables))
 
         "*** YOUR CODE HERE ***"
-        factors = bayesNet.getAllCPTsWithEvidence(evidenceDict)
+        probs = bayesNet.getAllCPTsWithEvidence(evidenceDict) #Obtem as Tabelas de Probabilidade Condicional
+        
         for var in eliminationOrder:
-            factors, new_factor = joinFactorsByVariable(factors, var)
-            if len(new_factor.unconditionedVariables()) > 1:
-                temp_factor = eliminate(new_factor, var)
-                factors.append(temp_factor)
-        final_factor = joinFactors(factors)
-        return normalize(final_factor)
+            probs, newProb = joinFactorsByVariable(probs, var)
+            if len(newProb.unconditionedVariables()) > 1:
+                temp_factor = eliminate(newProb, var) #junta os fatores (CPTs) na lista probs que envolvem a variável var.
+                
+                probs.append(temp_factor) 
+        
+        finalProb = joinFactors(probs) 
+        
+        return normalize(finalProb)
         "*** END YOUR CODE HERE ***"
 
 
@@ -349,9 +353,13 @@ class DiscreteDistribution(dict):
         """
         "*** YOUR CODE HERE ***"
         total = float(self.total())
-        if total == 0: return
+        
+        if total == 0: 
+            return
+        
         for key in self.keys():
             self[key] = self[key] / total
+        
         "*** END YOUR CODE HERE ***"
 
     def sample(self):
@@ -377,16 +385,20 @@ class DiscreteDistribution(dict):
         """
         "*** YOUR CODE HERE ***"
         if self.total() != 1:
-            self.normalize()
-        items = sorted(self.items())
-        distribution = [i[1] for i in items]
-        values = [i[0] for i in items]
+            self.normalize() # normalizar os elementos
+        
+        items = sorted(self.items()) # organizar os elementos
+        
+        distribuicao = [i[1] for i in items]
+        
+        valores = [i[0] for i in items]
         choice = random.random()
-        i, total = 0, distribution[0]
+        i, total = 0, distribuicao[0]
         while choice > total:
             i += 1
-            total += distribution[i]
-        return values[i]
+            total += distribuicao[i]
+        
+        return valores[i] #retornar uma amostra aleatoria
         "*** END YOUR CODE HERE ***"
 
 
@@ -468,7 +480,9 @@ class InferenceModule:
                 return 0.0
         if noisyDistance == None:
             return 0.0
+        
         trueDistance = manhattanDistance(pacmanPosition, ghostPosition)
+        
         return busters.getObservationProbability(noisyDistance, trueDistance)        
 
         "*** END YOUR CODE HERE ***"
@@ -591,8 +605,10 @@ class ExactInference(InferenceModule):
         for p in self.allPositions:
             prob = self.getObservationProb(observation, pacmanPosition, p, jailPosition) 
             dist[p] = prob * self.beliefs[p]
+            
         dist.normalize()
         self.beliefs = dist
+        
         "*** END YOUR CODE HERE ***"
         self.beliefs.normalize()
     
